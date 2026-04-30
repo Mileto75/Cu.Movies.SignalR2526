@@ -1,0 +1,11 @@
+﻿<div class="row">
+    @foreach (var movieModel in MovieModels)
+    {
+        <MovieComponent MovieModel="movieModel"></MovieComponent>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public IEnumerable<MovieModel> MovieModels { get; set; }
+}

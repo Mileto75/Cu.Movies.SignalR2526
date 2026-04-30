@@ -1,0 +1,15 @@
+﻿<div class="col col-lg-3 m-1 p-1">
+    <div class="card" style="width: 18rem;">
+        <!--tips: add .text-center,.text-right to the .card to change card text alignment-->
+        <img src="/images/@MovieModel.Image" class="card-img-top" alt="...">
+        <div class="card-body">
+            <h5 class="card-title">@MovieModel.Title</h5>
+            <h6 class="card-subtitle mb-2 text-muted">Company</h6>
+            <p class="card-text">@MovieModel.Company</p>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter]
+    public MovieModel MovieModel { get; set; }
+}

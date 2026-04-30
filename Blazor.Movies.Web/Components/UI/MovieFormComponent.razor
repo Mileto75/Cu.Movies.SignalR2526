@@ -1,0 +1,102 @@
+﻿@inject IWebHostEnvironment WebHostEnvironment
+@inject IMovieService MovieService
+@inject ICompanyService CompanyService
+
+<EditForm Model="@NewOrUpdateMovieModel" OnValidSubmit="@(async ()=>await OnStoreMovie.InvokeAsync(NewOrUpdateMovieModel))">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Movie Title</label>
+        <InputText @bind-Value="NewOrUpdateMovieModel.Title" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Release Date</label>
+        <InputDate @bind-Value="NewOrUpdateMovieModel.ReleaseDate" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        @if (companies is null)
+        {
+            <LoadingComponent></LoadingComponent>
+        }
+        else
+        {
+            <label>Company ID</label>
+            <InputSelect @bind-Value="NewOrUpdateMovieModel.CompanyId" class="form-select">
+                @foreach (var company in companies)
+                {
+                    <option value="@company.Id">@company.Name</option>
+                }
+            </InputSelect>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label>Price</label>
+        <InputNumber @bind-Value="NewOrUpdateMovieModel.Price" class="form-control" />
+    </div>
+
+    <div class="mb-3 border p-3">
+        <label>Upload Images</label>
+        <InputFile OnChange="UploadFiles"
+                   class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Save Movie</button>
+    <button type="button" @onclick="Cancel" class="btn btn-primary">Cancel</button>
+</EditForm>
+@code {
+    [Parameter]
+    public NewOrUpdateMovieModel NewOrUpdateMovieModel { get; set; }
+    [Parameter]
+    public EventCallback<NewOrUpdateMovieModel> OnStoreMovie { get; set; }
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+    private IEnumerable<Company> companies;
+
+    protected async override Task OnInitializedAsync()
+    {
+        var result = await CompanyService.GetAllAsync();
+        if (result.IsSuccess)
+        {
+            companies = result.Data;
+        }
+    }
+    private async Task UploadFiles(InputFileChangeEventArgs inputFileChangeEventArgs)
+    {
+        NewOrUpdateMovieModel.Images = new();
+        NewOrUpdateMovieModel.BrowserFile = inputFileChangeEventArgs.File;
+        //build the path to the wwwroot
+        var pathToTempFolder = Path.Combine(WebHostEnvironment.WebRootPath, "temp");
+
+        //upload file
+        //random file name
+        var randomName = $"{Guid.NewGuid()}_{NewOrUpdateMovieModel.BrowserFile.Name}";
+        try
+        {
+            if (!Directory.Exists(pathToTempFolder))
+                Directory.CreateDirectory(pathToTempFolder);
+            var PathToFile = Path.Combine(pathToTempFolder, randomName);
+            using (FileStream fileStream = new FileStream(PathToFile, FileMode.Create))
+            {
+                await NewOrUpdateMovieModel.BrowserFile.OpenReadStream().CopyToAsync(fileStream);
+            }
+            NewOrUpdateMovieModel.Images.Add($"{randomName}");
+        }
+        catch (IOException iOexception)
+        {
+            Console.WriteLine(iOexception.Message);
+        }
+
+    }
+    private async Task Cancel()
+    {
+        var pathToTemp = Path.Combine(WebHostEnvironment.WebRootPath, "temp");
+        if (Directory.Exists(pathToTemp))
+        {
+            Directory.Delete(pathToTemp, true);
+        }
+        await OnCancel.InvokeAsync();
+    }
+}

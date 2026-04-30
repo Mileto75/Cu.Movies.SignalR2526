@@ -1,0 +1,9 @@
+﻿<div class="alert alert-@Style fade show" role="alert">
+    <strong>@Message</strong>
+</div>
+@code {
+    [Parameter]
+    public string Message { get; set; }
+    [Parameter]
+    public string Style  { get; set; }
+}
